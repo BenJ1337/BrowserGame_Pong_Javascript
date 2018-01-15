@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Pong By Benjamin Hacker</title>
+  <style>
+  body {
+    background: #111111;
+  }
+    #paper {
+      width: 800px;
+      height: 350px;
+      border: 4px solid #999999;
+      border-left: 2px solid #990000;
+      border-right: 2px solid #990000;
+    }
+
+    #box {
+      width: 800px;
+      height: 354px;
+      margin: 10% auto;
+    }
+  </style>
+  <script>
+
+    window.onload = function() {
+      var audio1 = new Audio('wand.wav');
+      var audio2 = new Audio('player.wav');
+
+      class MyClass {
+        //Konstruktor
+        constructor(   ) { }
+        //Methodes
+        draw() { }
+
+      }
+
+      //Kamera
+      var canvas = document.getElementById("paper");
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+      c = canvas.getContext("2d");
+      c.fillStyle = "black";
+      c.fillRect(0, 0, canvas.width, canvas.height);
+
+      class Ball {
+        constructor() {
+          this.speed = 5;
+          this.width = 10;
+          this.height = 10;
+          this.x = canvas.width/2-this.width/2;
+          this.y = canvas.height/2-this.height/2;
+          this.x_speed = this.speed;
+          this.y_speed = this.speed;
+          this.speed_up = 2;
+
+          c.fillRect(this.x,this.y,this.width,this.height);
+          c.fillStyle = "white";
+        }
+
+        update(x, y, player, ai, text, move) {
+
+          if (this.x < 0 && (player.y > (this.y+this.height) || ((player.y+player.height) < this.y)) )  {
+            player.y = canvas.height/2-player.height/2;
+            ai.y = canvas.height/2-ai.height/2;
+            this.respawn();
+            text[0].update();
+            this.x_speed *= -1;
+          }else if (this.x+this.width > canvas.width  && (ai.y > (this.y+this.height) || ((ai.y+ai.height) < this.y))) {
+            player.y = canvas.height/2-player.height/2;
+            ai.y = canvas.height/2-ai.height/2;
+            this.respawn();
+            text[1].update();
+          }
+
+          if (y > 0) {
+            if (this.y < 0 || (this.y+this.height) > canvas.height) {
+              this.y_speed *= -1;
+            }
+            this.y += this.y_speed;
+          }
+          if (x > 0) {
+            this.x += this.x_speed;
+          }
+
+          if (this.x < player.x+player.width && this.y < player.y+player.height && this.y+this.height > player.y) {
+              if (this.x_speed > -40) {
+                this.x_speed -= this.speed_up;
+              }
+              this.x_speed *= -1;
+
+              if (move > 0 && this.y_speed < 0) {
+                this.y_speed *= -1;
+              }else if (move < 0 && this.y_speed > 0) {
+                this.y_speed *= -1;
+              }
+              audio2.play();
+          }
+
+          if (this.x+this.width > ai.x && this.y < ai.y+ai.height && this.y+this.height > ai.y) {
+            if (this.x_speed < 40) {
+              this.x_speed += this.speed_up;
+            }
+              this.x_speed *= -1;
+              audio2.play();
+
+
+
+
+          }
+
+        }
+
+        respawn() {
+        this.x_speed = this.speed;
+        this.y_speed = this.speed;
+        this.x = canvas.width/2-this.width/2;
+        this.y = canvas.height/2-this.height/2;
+        audio1.play();
+        }
+
+        draw(c) {
+          c.fillStyle = "white";
+          c.fillRect (this.x,this.y,this.width,this.height);
+
+        }
+      }
+
+      class Player {
+        constructor() {
+          this.width = 15;
+          this.height = canvas.height/3;
+          this.y = canvas.height/2-this.height/2;
+          this.x = 10;
+          this.speed = 4;
+        }
+
+        update(y) {
+          if (y > 0) {
+            if (!((this.y+this.height) > canvas.height)) {
+                  this.y += this.speed;
+            }
+          }
+          if (y < 0) {
+            if ( !(this.y < 0 ) ) {
+                  this.y += -this.speed;
+            }
+          }
+        }
+
+        draw(c) {
+          c.fillStyle = "white";
+          c.fillRect (this.x,this.y,this.width,this.height);
+
+        }
+      }
+
+      class Ai {
+        constructor() {
+          this.width = 15;
+          this.height = canvas.height/3;
+          this.y = canvas.height/2-this.height/2;
+          this.x = canvas.width-this.width-10;
+          this.speed = 4;
+        }
+
+        update(ball) {
+            if (!((this.y+this.height) > canvas.height)) {
+              if(ball.y+ball.height/2 > this.y+this.height/2) {
+                this.y += this.speed;
+              }
+            }
+
+            if ( !(this.y < 0 ) ) {
+              if(ball.y+ball.height/2 < this.y+this.height/2) {
+                this.y -= this.speed;
+              }
+            }
+
+
+
+        }
+
+        draw(c) {
+          c.fillStyle = "white";
+          c.fillRect (this.x,this.y,this.width,this.height);
+
+        }
+      }
+
+      class Text {
+        constructor(x, y) {
+          this.score = 0;
+          this.x = x;
+          this.y = y;
+          this.fontsize = 30;
+        }
+
+          update() {
+            this.score += 1;
+          }
+
+          draw(c) {
+            c.font=this.fontsize+"px Verdana";
+            c.fillText(this.score, this.x, this.y);
+          }
+      }
+
+      var myBall = new Ball();
+      var myPlayer = new Player();
+      var myAi = new Ai();
+      var scores = [new Text(canvas.width-100, 50), new Text(100, 50)];
+
+
+      var move = 0;
+      window.addEventListener('keydown', function (e) {
+          if (e.keyCode == 40) {
+              move = 1;
+          }
+          if (e.keyCode == 38) {
+              move = -1;
+          }
+      }, false);
+      window.addEventListener('keyup', function (e) {
+          move = 0;
+      }, false);
+
+      //GAME LOOP
+      var fps = 33;
+      function gameloop() {
+          setTimeout(function() {
+
+              requestAnimationFrame(gameloop);
+
+              myBall.update(1, 1, myPlayer, myAi, scores, move);
+              myPlayer.update(move);
+              myAi.update(myBall);
+
+              c.fillStyle = "black";
+              c.fillRect(0, 0, canvas.width, canvas.height);
+              myBall.draw(c);
+              myPlayer.draw(c);
+              myAi.draw(c);
+              for (var i = 0; i < scores.length; i++) {
+                  scores[i].draw(c);
+              }
+            //UPDATE METHODES
+
+          }, 1000 / fps);
+      }
+
+      gameloop();
+    }
+
+  </script>
+</head>
+<body>
+  <div id="box">
+    <canvas id="paper">no javascript activ</canvas>
+  </div>
+</body>
+</html>
